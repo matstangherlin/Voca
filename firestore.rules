@@ -1,0 +1,83 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Word Validation
+    function isValidWord(data) {
+      return data.keys().hasAll(['word', 'meaning', 'etymology', 'examples', 'category', 'addedDate'])
+        && data.keys().size() >= 6 && data.keys().size() <= 8
+        && data.word is string && data.word.size() <= 100
+        && data.meaning is string && data.meaning.size() <= 1000
+        && data.etymology is string && data.etymology.size() <= 2000
+        && data.examples is list && data.examples.size() >= 1 && data.examples.size() <= 10
+        && data.category in ['literário', 'científico', 'cotidiano', 'arcaico', 'expressão']
+        && data.addedDate is string
+        && (data.get('pronunciation', '') is string)
+        && (data.get('id', '') is string);
+    }
+
+    // User Progress Validation
+    function isValidUserProgress(data) {
+      return data.keys().hasAll(['userId', 'learnedWords', 'favoriteWords', 'streak', 'lastActive', 'level', 'points'])
+        && data.keys().size() == 7
+        && data.userId == request.auth.uid
+        && data.learnedWords is list && data.learnedWords.size() <= 10000
+        && data.favoriteWords is list && data.favoriteWords.size() <= 1000
+        && data.streak is number && data.streak >= 0
+        && data.lastActive is string
+        && data.level in ['Iniciante', 'Intermediário', 'Avançado']
+        && data.points is number && data.points >= 0;
+    }
+
+    // Words Collection
+    match /words/{wordId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      // Only allow creation/update if valid. In a real app, maybe only admins.
+      allow create: if isSignedIn() && isValidWord(incoming()) && isValidId(wordId);
+      allow update: if isSignedIn() && isValidWord(incoming()) 
+        && incoming().diff(existing()).affectedKeys().hasOnly(['meaning', 'etymology', 'examples', 'category'])
+        && incoming().word == existing().word; // Word itself is immutable
+    }
+
+    // User Progress Collection
+    match /users/{userId} {
+      match /progress/data {
+        allow get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidUserProgress(incoming());
+        allow update: if isOwner(userId) && isValidUserProgress(incoming())
+          && (
+            // Action: Learn Word
+            (incoming().diff(existing()).affectedKeys().hasOnly(['learnedWords', 'lastActive', 'streak', 'points', 'level'])) ||
+            // Action: Favorite Word
+            (incoming().diff(existing()).affectedKeys().hasOnly(['favoriteWords']))
+          );
+      }
+    }
+  }
+}

@@ -1,0 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-primary: #000000;
+  --color-secondary: #ffffff;
+  --color-highlight: #4A90E2;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  html, body {
+    @apply bg-white text-black font-sans antialiased transition-colors duration-300;
+  }
+  
+  html.dark body {
+    @apply bg-[#0A0A0A] text-white;
+  }
+}
+
+.notion-card {
+  @apply bg-white border border-gray-100 rounded-lg p-6 hover:border-gray-200 transition-all duration-200;
+}
+
+.dark .notion-card {
+  @apply bg-[#141414] border-[#1f1f1f] shadow-none;
+}
+
+.btn-primary {
+  @apply bg-black text-white px-4 py-2 rounded-md font-medium hover:bg-gray-800 transition-colors;
+}
+
+.dark .btn-primary {
+  @apply bg-white text-black hover:bg-gray-200;
+}
+
+.btn-secondary {
+  @apply bg-white border border-gray-100 text-black px-4 py-2 rounded-md font-medium hover:bg-white hover:border-gray-300 transition-colors;
+}
+
+.dark .btn-secondary {
+  @apply bg-[#1f1f1f] border-none text-white hover:bg-[#2a2a2a];
+}
+
+/* Custom scrollbar for dark mode */
+.dark ::-webkit-scrollbar {
+  width: 10px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #0A0A0A;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #1f1f1f;
+  border-radius: 5px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #2a2a2a;
+}

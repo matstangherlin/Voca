@@ -1,0 +1,44 @@
+{
+  "entities": {
+    "Word": {
+      "title": "Word",
+      "description": "A vocabulary word with its linguistic details.",
+      "type": "object",
+      "properties": {
+        "word": { "type": "string" },
+        "pronunciation": { "type": "string" },
+        "meaning": { "type": "string" },
+        "etymology": { "type": "string" },
+        "examples": { "type": "array", "items": { "type": "string" } },
+        "category": { "type": "string", "enum": ["literário", "científico", "cotidiano", "arcaico", "expressão"] },
+        "addedDate": { "type": "string", "format": "date" }
+      },
+      "required": ["word", "meaning", "etymology", "examples", "category", "addedDate"]
+    },
+    "UserProgress": {
+      "title": "UserProgress",
+      "description": "User's learning progress and favorites.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "learnedWords": { "type": "array", "items": { "type": "string" } },
+        "favoriteWords": { "type": "array", "items": { "type": "string" } },
+        "streak": { "type": "number" },
+        "lastActive": { "type": "string", "format": "date" },
+        "level": { "type": "string", "enum": ["Iniciante", "Intermediário", "Avançado"] },
+        "points": { "type": "number" }
+      },
+      "required": ["userId", "learnedWords", "favoriteWords", "streak", "lastActive", "level", "points"]
+    }
+  },
+  "firestore": {
+    "/words/{wordId}": {
+      "schema": "Word",
+      "description": "Global dictionary of words."
+    },
+    "/users/{userId}/progress/data": {
+      "schema": "UserProgress",
+      "description": "User specific learning data."
+    }
+  }
+}
